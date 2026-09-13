@@ -16,6 +16,7 @@ from app.models.tables import (
     event_articles,
 )
 from app.processing.deduplicator import DeduplicationEngine
+from app.processing.enricher import EventEnricher
 from app.rag.vectorstore import ChromaVectorStore, get_vector_store
 
 
@@ -25,10 +26,12 @@ class EventService:
         db_session: AsyncSession,
         dedup_engine: DeduplicationEngine | None = None,
         vector_store: ChromaVectorStore | None = None,
+        enricher: EventEnricher | None = None,
     ) -> None:
         self.db = db_session
         self.dedup = dedup_engine or DeduplicationEngine()
         self.vector_store = vector_store or get_vector_store()
+        self.enricher = enricher or EventEnricher()
         self.redis = get_redis_client()
 
     async def ingest_event(
@@ -52,6 +55,16 @@ class EventService:
         if dedup_result.is_duplicate:
             return event, dedup_result
 
+        # Step 1.5: AI / Heuristic Enrichment (What happened, Why it matters, Impact, Importance)
+        if not event.summary or not event.why_it_matters or event.importance_score is None:
+            summary, why_it_matters, impact_tags, importance_score = await self.enricher.enrich(
+                event
+            )
+            event.summary = summary
+            event.why_it_matters = why_it_matters
+            event.impact_tags = impact_tags
+            event.importance_score = importance_score
+
         # Step 2: Persist in Relational DB
         article_row = ArticleTable(
             id=event.id,
@@ -62,6 +75,8 @@ class EventService:
             title=event.title,
             body=event.body,
             summary=event.summary,
+            why_it_matters=event.why_it_matters,
+            impact_tags=[tag.model_dump() for tag in event.impact_tags],
             event_type=event.event_type.value,
             importance_score=event.importance_score,
             source_reliability=event.reliability.value,
@@ -124,6 +139,8 @@ class EventService:
                 importance_score=event.importance_score,
                 title=event.title,
                 summary=event.summary,
+                why_it_matters=event.why_it_matters,
+                impact_tags=[tag.model_dump() for tag in event.impact_tags],
                 first_detected_at=event.ingested_at,
                 last_updated_at=datetime.now(UTC),
             )
@@ -150,6 +167,10 @@ class EventService:
                 "source": event.source,
                 "title": event.title,
                 "body": event.body,
+                "summary": event.summary,
+                "why_it_matters": event.why_it_matters,
+                "impact_tags": [tag.model_dump() for tag in event.impact_tags],
+                "importance_score": event.importance_score,
                 "url": event.url,
                 "published_at": event.published_at.isoformat() if event.published_at else None,
                 "ingested_at": event.ingested_at.isoformat(),

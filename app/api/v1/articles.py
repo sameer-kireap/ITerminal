@@ -19,6 +19,8 @@ class ArticleDTO(BaseModel):
     title: str
     body: str
     summary: str | None
+    why_it_matters: str | None = None
+    impact_tags: list[dict[str, Any]] = []
     event_type: str
     importance_score: float | None
     source_reliability: str
@@ -56,6 +58,8 @@ async def list_articles_endpoint(
                 title=r.title,
                 body=r.body,
                 summary=r.summary,
+                why_it_matters=r.why_it_matters,
+                impact_tags=r.impact_tags or [],
                 event_type=r.event_type,
                 importance_score=r.importance_score,
                 source_reliability=r.source_reliability,

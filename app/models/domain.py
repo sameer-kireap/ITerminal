@@ -48,6 +48,19 @@ class Citation(BaseModel):
     content_hash: str
 
 
+class ImpactTag(BaseModel):
+    category: str = Field(description="e.g. Revenue, Margin, Valuation, Regulatory, Supply Chain")
+    sentiment: str = Field(description="positive, negative, neutral")
+    note: str | None = None
+
+
+class EnrichmentResult(BaseModel):
+    summary: str
+    why_it_matters: str
+    impact_tags: list[ImpactTag] = Field(default_factory=list)
+    importance_score: float = Field(ge=0.0, le=1.0)
+
+
 class InvestmentEvent(BaseModel):
     id: str = Field(description="Deterministic or UUID string")
     source: str = Field(description="Source identifier, e.g., 'sec_edgar'")
@@ -62,6 +75,8 @@ class InvestmentEvent(BaseModel):
     title: str
     body: str
     summary: str | None = None
+    why_it_matters: str | None = None
+    impact_tags: list[ImpactTag] = Field(default_factory=list)
     event_type: EventType = EventType.GENERAL
 
     entities: list[Entity] = Field(default_factory=list)

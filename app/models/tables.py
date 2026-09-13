@@ -64,6 +64,8 @@ class ArticleTable(Base):
     title = Column(Text, nullable=False)
     body = Column(Text, nullable=False)
     summary = Column(Text, nullable=True)
+    why_it_matters = Column(Text, nullable=True)
+    impact_tags = Column(JSON, default=list)
     event_type = Column(String(32), nullable=False, index=True)
     importance_score = Column(Float, nullable=True)
     source_reliability = Column(String(16), default="medium")
@@ -86,7 +88,18 @@ class EventTable(Base):
     importance_score = Column(Float, nullable=True)
     title = Column(Text, nullable=False)
     summary = Column(Text, nullable=True)
+    why_it_matters = Column(Text, nullable=True)
+    impact_tags = Column(JSON, default=list)
     first_detected_at = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
     last_updated_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     articles = relationship("ArticleTable", secondary=event_articles, back_populates="events")
+
+
+class WatchlistTable(Base):
+    __tablename__ = "watchlists"
+
+    id = Column(String(64), primary_key=True)
+    user_id = Column(String(64), default="default_user", index=True)
+    ticker = Column(String(16), nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))

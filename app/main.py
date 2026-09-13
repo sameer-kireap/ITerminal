@@ -7,7 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.api.v1.alerts import router as alerts_router
 from app.api.v1.articles import router as articles_router
+from app.api.v1.companies import router as companies_router
 from app.api.v1.ingestion import router as ingestion_router
 from app.core.config import get_settings
 from app.core.database import init_db
@@ -42,6 +44,8 @@ app.add_middleware(
 
 app.include_router(ingestion_router, prefix=settings.API_V1_PREFIX)
 app.include_router(articles_router, prefix=settings.API_V1_PREFIX)
+app.include_router(companies_router, prefix=settings.API_V1_PREFIX)
+app.include_router(alerts_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/health")
