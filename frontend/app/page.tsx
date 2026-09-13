@@ -5,24 +5,32 @@ import { AlertsTab } from "../components/AlertsTab";
 import CalendarTab from "../components/CalendarTab";
 import { CommandBar } from "../components/CommandBar";
 import { CopilotTab } from "../components/CopilotTab";
+import { DevToolbar } from "../components/DevToolbar";
 import { EventCard } from "../components/EventCard";
 import FundamentalsTab from "../components/FundamentalsTab";
 import { Header } from "../components/Header";
+import { Sidebar } from "../components/Sidebar";
 import { SideInspector } from "../components/SideInspector";
+import { StatusBar } from "../components/StatusBar";
+import { TickerStrip } from "../components/TickerStrip";
 import { WatchlistTab } from "../components/WatchlistTab";
 import { WhatChangedTab } from "../components/WhatChangedTab";
 import { fetchArticles, simulateScenario } from "../lib/api";
+import { useKeyboardNav } from "../lib/useKeyboardNav";
 import { Article } from "../lib/types";
 
+type TabId = "feed" | "alerts" | "delta" | "watchlist" | "copilot" | "fundamentals" | "calendar";
+
 export default function TerminalDashboard() {
-  const [activeTab, setActiveTab] = useState<
-    "feed" | "alerts" | "delta" | "watchlist" | "copilot" | "fundamentals" | "calendar"
-  >("feed");
+  const [activeTab, setActiveTab] = useState<TabId>("feed");
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [showDevToolbar, setShowDevToolbar] = useState<boolean>(true);
+  const [showShortcuts, setShowShortcuts] = useState<boolean>(false);
+  const [isSimulating, setIsSimulating] = useState<boolean>(false);
 
-  // Filters
   const [tickerFilter, setTickerFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [minImportance, setMinImportance] = useState<number>(0.0);
@@ -33,6 +41,7 @@ export default function TerminalDashboard() {
       setArticles(data);
       if (data.length > 0 && !selectedArticle) {
         setSelectedArticle(data[0]);
+        setSelectedIndex(0);
       }
     } catch (err) {
       console.error("Failed to load articles:", err);
@@ -43,7 +52,6 @@ export default function TerminalDashboard() {
     loadInitialArticles();
   }, [loadInitialArticles]);
 
-  // Real-time WebSocket connection to FastAPI live feed
   useEffect(() => {
     let ws: WebSocket | null = null;
     let reconnectTimeout: NodeJS.Timeout;
@@ -53,9 +61,7 @@ export default function TerminalDashboard() {
         const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8000/ws/live-feed";
         ws = new WebSocket(wsUrl);
 
-        ws.onopen = () => {
-          setIsConnected(true);
-        };
+        ws.onopen = () => setIsConnected(true);
 
         ws.onmessage = (evt) => {
           try {
@@ -97,14 +103,13 @@ export default function TerminalDashboard() {
           setIsConnected(false);
           ws?.close();
         };
-      } catch (err) {
+      } catch {
         setIsConnected(false);
         reconnectTimeout = setTimeout(connectWS, 2500);
       }
     };
 
     connectWS();
-
     return () => {
       clearTimeout(reconnectTimeout);
       if (ws) ws.close();
@@ -112,9 +117,13 @@ export default function TerminalDashboard() {
   }, []);
 
   const handleSimulate = async (scenario: string) => {
-    await simulateScenario(scenario);
-    // Give pipeline 300ms to persist then refresh feed
-    setTimeout(loadInitialArticles, 300);
+    setIsSimulating(true);
+    try {
+      await simulateScenario(scenario);
+      setTimeout(loadInitialArticles, 300);
+    } finally {
+      setIsSimulating(false);
+    }
   };
 
   const filteredArticles = useMemo(() => {
@@ -127,11 +136,7 @@ export default function TerminalDashboard() {
           return false;
         }
       }
-
-      if (minImportance > 0 && (art.importance_score ?? 0) < minImportance) {
-        return false;
-      }
-
+      if (minImportance > 0 && (art.importance_score ?? 0) < minImportance) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const matchesText =
@@ -140,47 +145,108 @@ export default function TerminalDashboard() {
           (art.summary && art.summary.toLowerCase().includes(q));
         if (!matchesText) return false;
       }
-
       return true;
     });
   }, [articles, tickerFilter, minImportance, searchQuery]);
 
+  const navigateDown = useCallback(() => {
+    if (filteredArticles.length === 0) return;
+    const nextIdx = Math.min(selectedIndex + 1, filteredArticles.length - 1);
+    setSelectedIndex(nextIdx);
+    setSelectedArticle(filteredArticles[nextIdx]);
+  }, [filteredArticles, selectedIndex]);
+
+  const navigateUp = useCallback(() => {
+    if (filteredArticles.length === 0) return;
+    const prevIdx = Math.max(selectedIndex - 1, 0);
+    setSelectedIndex(prevIdx);
+    setSelectedArticle(filteredArticles[prevIdx]);
+  }, [filteredArticles, selectedIndex]);
+
+  const handleEscape = useCallback(() => {
+    if (tickerFilter) {
+      setTickerFilter(null);
+    } else if (searchQuery) {
+      setSearchQuery("");
+    } else {
+      setSelectedArticle(null);
+    }
+  }, [tickerFilter, searchQuery]);
+
+  useKeyboardNav({
+    setActiveTab,
+    onNavigateUp: navigateUp,
+    onNavigateDown: navigateDown,
+    onEscape: handleEscape,
+    onToggleDevToolbar: () => setShowDevToolbar((v) => !v),
+    showShortcuts,
+    setShowShortcuts,
+  });
+
+  const handleTickerClick = (symbol: string) => {
+    setTickerFilter(symbol);
+    setActiveTab("feed");
+  };
+
   return (
-    <div>
+    <div className="terminal-shell">
+      <TickerStrip onTickerClick={handleTickerClick} />
+
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+
       <Header
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
         isConnected={isConnected}
         eventCount={articles.length}
-        onSimulate={handleSimulate}
+        showDevToolbar={showDevToolbar}
+        onToggleDevToolbar={() => setShowDevToolbar((v) => !v)}
       />
 
-      <div className="terminal-container">
-        <main className="main-stream">
+      <main className="main-content">
+        {showDevToolbar && (
+          <DevToolbar onSimulate={handleSimulate} isSimulating={isSimulating} />
+        )}
+
+        {(activeTab === "feed" || activeTab === "alerts") && (
           <CommandBar
             onSearch={(q) => setSearchQuery(q)}
             onFilterTicker={(t) => setTickerFilter(t)}
             currentTicker={tickerFilter}
             onSetMinImportance={(v) => setMinImportance(v)}
           />
+        )}
 
+        <div className="content-scroll">
           {activeTab === "feed" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <>
+              <div className="feed-column-header">
+                <span>TIME</span>
+                <span>TICKER</span>
+                <span>EVENT</span>
+                <span>MAT</span>
+                <span style={{ textAlign: "right" }}>SOURCE</span>
+              </div>
               {filteredArticles.length === 0 ? (
-                <div style={{ color: "var(--text-muted)", fontFamily: "var(--font-mono)", padding: "3rem", textAlign: "center" }}>
-                  NO INTELLIGENCE EVENTS MATCH THE CURRENT FILTER. USE TEST INGESTION BUTTONS ABOVE TO DISPATCH EVENTS.
+                <div className="empty-state">
+                  <div className="empty-state-icon">◇</div>
+                  NO INTELLIGENCE EVENTS MATCH FILTER.
+                  <br />
+                  USE ▸ DEV TOOLBAR TO DISPATCH TEST EVENTS.
                 </div>
               ) : (
-                filteredArticles.map((article) => (
+                filteredArticles.map((article, idx) => (
                   <EventCard
                     key={article.id}
                     article={article}
                     isSelected={selectedArticle?.id === article.id}
-                    onSelect={(a) => setSelectedArticle(a)}
+                    onSelect={(a) => {
+                      setSelectedArticle(a);
+                      setSelectedIndex(idx);
+                    }}
                   />
                 ))
               )}
-            </div>
+            </>
           )}
 
           {activeTab === "copilot" && <CopilotTab />}
@@ -193,15 +259,43 @@ export default function TerminalDashboard() {
           {activeTab === "alerts" && <AlertsTab />}
           {activeTab === "delta" && <WhatChangedTab />}
           {activeTab === "watchlist" && <WatchlistTab />}
-        </main>
+        </div>
+      </main>
 
-        {activeTab === "feed" && (
-          <SideInspector
-            article={selectedArticle}
-            onClose={() => setSelectedArticle(null)}
-          />
-        )}
-      </div>
+      <SideInspector
+        article={selectedArticle}
+        activeTab={activeTab}
+        onClose={() => setSelectedArticle(null)}
+      />
+
+      <StatusBar
+        isConnected={isConnected}
+        eventCount={articles.length}
+        activeFilter={tickerFilter}
+        activeTab={activeTab}
+      />
+
+      {showShortcuts && (
+        <div className="shortcuts-overlay" onClick={() => setShowShortcuts(false)}>
+          <div className="shortcuts-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>⌨ KEYBOARD SHORTCUTS</h3>
+            {[
+              ["/", "Focus command bar"],
+              ["1-7", "Switch tabs (Feed, Research, Fundamentals, Calendar, Alerts, Delta, Watchlist)"],
+              ["j / ↓", "Navigate to next event"],
+              ["k / ↑", "Navigate to previous event"],
+              ["Esc", "Clear filter / Close inspector"],
+              ["?", "Toggle this shortcuts panel"],
+              ["⌘⇧D", "Toggle dev toolbar"],
+            ].map(([key, desc]) => (
+              <div key={key} className="shortcut-row">
+                <span className="shortcut-desc">{desc}</span>
+                <span className="shortcut-key">{key}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

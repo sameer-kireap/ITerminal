@@ -6,15 +6,28 @@ import { Article } from "../lib/types";
 
 interface SideInspectorProps {
   article: Article | null;
+  activeTab: string;
   onClose: () => void;
 }
 
-export function SideInspector({ article, onClose }: SideInspectorProps) {
+export function SideInspector({ article, activeTab, onClose }: SideInspectorProps) {
   if (!article) {
     return (
-      <div className="side-panel">
-        <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginTop: "2rem", textAlign: "center" }}>
-          Select an event from the intelligence feed to view vector embeddings, entity graphs, and full source attribution.
+      <div className="inspector-panel">
+        <div className="inspector-header">
+          <span className="inspector-title">INTELLIGENCE INSPECTOR</span>
+          <span />
+        </div>
+        <div className="inspector-empty">
+          <div style={{ fontSize: "1.2rem", marginBottom: "0.5rem", opacity: 0.3 }}>⬡</div>
+          SELECT ANY EVENT FROM THE<br />
+          INTELLIGENCE FEED TO INSPECT<br />
+          SOURCE PROVENANCE, ENTITY<br />
+          RESOLUTION, AND VECTOR<br />
+          EMBEDDING METADATA.
+          <div style={{ marginTop: "1rem", fontSize: "0.58rem", color: "var(--border-bright)" }}>
+            KEYBOARD: j/k TO NAVIGATE • ENTER TO EXPAND
+          </div>
         </div>
       </div>
     );
@@ -23,92 +36,79 @@ export function SideInspector({ article, onClose }: SideInspectorProps) {
   const primaryEntity = article.entities.find((e) => e.ticker) || article.entities[0];
 
   return (
-    <div className="side-panel">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--cyan)", fontWeight: 700 }}>
-          INTELLIGENCE INSPECTOR
-        </span>
-        <button
-          onClick={onClose}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "var(--text-muted)",
-            cursor: "pointer",
-            fontSize: "1rem",
-          }}
-        >
-          ✕
-        </button>
+    <div className="inspector-panel">
+      <div className="inspector-header">
+        <span className="inspector-title">INTELLIGENCE INSPECTOR</span>
+        <button className="inspector-close" onClick={onClose} title="Close (Esc)">✕</button>
       </div>
 
-      <div>
-        <h4 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+      <div className="inspector-body">
+        <div style={{ fontSize: "0.82rem", fontWeight: 700, lineHeight: 1.35 }}>
           {article.title}
-        </h4>
+        </div>
+
         {primaryEntity?.ticker && (
           <Link
             href={`/company/${primaryEntity.ticker}`}
-            style={{
-              display: "inline-block",
-              fontSize: "0.78rem",
-              fontFamily: "var(--font-mono)",
-              color: "var(--cyan)",
-              marginBottom: "1rem",
-            }}
+            className="inspector-link"
+            style={{ textAlign: "left", fontSize: "0.6rem" }}
           >
-            VIEW FULL {primaryEntity.ticker} PROFILE &amp; TIMELINE &rarr;
+            VIEW {primaryEntity.ticker} PROFILE & TIMELINE →
           </Link>
         )}
-      </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-        <div style={{ background: "var(--bg-base)", padding: "0.75rem", borderRadius: "6px", border: "1px solid var(--border)" }}>
-          <div style={{ fontSize: "0.7rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", marginBottom: "0.3rem" }}>
-            MATERIALITY SCORE
-          </div>
-          <div style={{ fontSize: "1.2rem", fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--cyan)" }}>
+        <div className="inspector-section">
+          <div className="inspector-section-label">MATERIALITY SCORE</div>
+          <div className="inspector-section-value">
             {article.importance_score?.toFixed(2) ?? "N/A"}
           </div>
         </div>
 
-        <div style={{ background: "var(--bg-base)", padding: "0.75rem", borderRadius: "6px", border: "1px solid var(--border)" }}>
-          <div style={{ fontSize: "0.7rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", marginBottom: "0.3rem" }}>
-            RESOLVED ENTITIES ({article.entities.length})
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+        <div className="inspector-section">
+          <div className="inspector-section-label">RESOLVED ENTITIES ({article.entities.length})</div>
+          <div style={{ marginTop: "0.2rem" }}>
             {article.entities.map((e, idx) => (
-              <span
-                key={idx}
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "0.72rem",
-                  background: "var(--bg-card)",
-                  padding: "0.2rem 0.5rem",
-                  borderRadius: "4px",
-                  border: "1px solid var(--border-bright)",
-                }}
-              >
+              <span key={idx} className="inspector-entity-chip">
                 {e.name} {e.ticker ? `(${e.ticker})` : ""}
               </span>
             ))}
           </div>
         </div>
 
-        <div style={{ background: "var(--bg-base)", padding: "0.75rem", borderRadius: "6px", border: "1px solid var(--border)" }}>
-          <div style={{ fontSize: "0.7rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", marginBottom: "0.3rem" }}>
-            DETERMINISTIC SHA-256 HASH
+        <div className="inspector-section">
+          <div className="inspector-section-label">EVENT CLASSIFICATION</div>
+          <div className="inspector-section-body">
+            <span style={{ textTransform: "uppercase", fontWeight: 600, fontSize: "0.65rem" }}>
+              {article.event_type}
+            </span>
+            <span style={{ margin: "0 0.3rem", opacity: 0.3 }}>•</span>
+            <span style={{ fontSize: "0.65rem" }}>{article.source.toUpperCase()}</span>
           </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem", color: "var(--text-secondary)", wordBreak: "break-all" }}>
+        </div>
+
+        <div className="inspector-section">
+          <div className="inspector-section-label">DETERMINISTIC SHA-256 HASH</div>
+          <div style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.55rem",
+            color: "var(--text-muted)",
+            wordBreak: "break-all",
+            lineHeight: 1.4,
+          }}>
             {article.content_hash}
           </div>
         </div>
 
-        <div style={{ background: "var(--bg-base)", padding: "0.75rem", borderRadius: "6px", border: "1px solid var(--border)" }}>
-          <div style={{ fontSize: "0.7rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", marginBottom: "0.3rem" }}>
-            SOURCE CONTENT BODY
-          </div>
-          <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.5", maxHeight: "220px", overflowY: "auto" }}>
+        <div className="inspector-section">
+          <div className="inspector-section-label">SOURCE CONTENT BODY</div>
+          <div style={{
+            fontSize: "0.7rem",
+            color: "var(--text-secondary)",
+            lineHeight: 1.5,
+            maxHeight: "180px",
+            overflowY: "auto",
+            marginTop: "0.2rem",
+          }}>
             {article.body}
           </div>
         </div>
@@ -118,16 +118,7 @@ export function SideInspector({ article, onClose }: SideInspectorProps) {
             href={article.url}
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.75rem",
-              color: "var(--cyan)",
-              textAlign: "center",
-              padding: "0.5rem",
-              background: "rgba(6, 182, 212, 0.1)",
-              border: "1px solid rgba(6, 182, 212, 0.3)",
-              borderRadius: "6px",
-            }}
+            className="inspector-link"
           >
             OPEN ORIGINAL DISCLOSURE ↗
           </a>
