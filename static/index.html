@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iTerminal — AI-Native Investment Intelligence Terminal</title>
+  <meta name="description" content="Institutional-grade real-time financial intelligence terminal with 3-tier deduplication, entity resolution, and vector indexing.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/terminal.css">
+</head>
+<body>
+  <div class="terminal-shell">
+    <!-- Top System Bar -->
+    <header class="top-bar">
+      <div class="brand-group">
+        <span class="terminal-icon">⚡</span>
+        <h1 class="brand-title">iTERMINAL <span class="brand-badge">PHASE 1 CORE</span></h1>
+        <span class="system-status-pill">
+          <span class="pulse-dot"></span>
+          <span id="ws-status-text">CONNECTING</span>
+        </span>
+      </div>
+
+      <div class="system-metrics">
+        <div class="metric-item">
+          <span class="metric-label">EVENTS INGESTED</span>
+          <span class="metric-val" id="metric-total-events">0</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">DEDUP RATIO</span>
+          <span class="metric-val text-cyan" id="metric-dedup-ratio">0.0%</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">AVG LATENCY</span>
+          <span class="metric-val text-emerald">&lt; 12ms</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">CLOCK (UTC)</span>
+          <span class="metric-val font-mono" id="utc-clock">00:00:00</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <div class="workspace-grid">
+      <!-- Left Control & Filter Column -->
+      <aside class="control-sidebar">
+        <!-- Ingestion Simulator Panel -->
+        <div class="panel-section">
+          <div class="panel-header">
+            <span class="panel-tag">INGESTION CONSOLE</span>
+            <span class="status-indicator live">READY</span>
+          </div>
+          <p class="panel-caption">Simulate real-time external market events to verify L1/L2/L3 deduplication and entity resolution:</p>
+          <div class="sim-actions">
+            <button class="sim-btn btn-primary" id="btn-sim-nvda">
+              <span class="sim-btn-icon">🏛️</span>
+              <span class="sim-btn-text">
+                <strong>SEC 8-K: NVDA Q4 Beat</strong>
+                <small>Form 8-K Item 2.02 Primary Disclosure</small>
+              </span>
+            </button>
+
+            <button class="sim-btn btn-warning" id="btn-sim-reuters">
+              <span class="sim-btn-icon">📡</span>
+              <span class="sim-btn-text">
+                <strong>Reuters Wire Syndication</strong>
+                <small>Tests SimHash Near-Deduplication</small>
+              </span>
+            </button>
+
+            <button class="sim-btn" id="btn-sim-apple">
+              <span class="sim-btn-icon">🤝</span>
+              <span class="sim-btn-text">
+                <strong>Apple + Gemini AI Deal</strong>
+                <small>Multi-Entity NER Resolution</small>
+              </span>
+            </button>
+
+            <button class="sim-btn" id="btn-sim-tesla">
+              <span class="sim-btn-icon">⚡</span>
+              <span class="sim-btn-text">
+                <strong>SEC 10-Q: Tesla FCF Report</strong>
+                <small>Form 10-Q Financial Filing</small>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Ticker Watchlist Filter -->
+        <div class="panel-section">
+          <div class="panel-header">
+            <span class="panel-tag">TICKER WATCHLIST</span>
+            <button class="reset-filter-btn" id="btn-reset-filters">CLEAR</button>
+          </div>
+          <div class="ticker-chip-group" id="ticker-chips">
+            <button class="ticker-chip active" data-ticker="">ALL</button>
+            <button class="ticker-chip" data-ticker="NVDA">NVDA</button>
+            <button class="ticker-chip" data-ticker="AAPL">AAPL</button>
+            <button class="ticker-chip" data-ticker="MSFT">MSFT</button>
+            <button class="ticker-chip" data-ticker="TSLA">TSLA</button>
+            <button class="ticker-chip" data-ticker="GOOGL">GOOGL</button>
+            <button class="ticker-chip" data-ticker="AMD">AMD</button>
+          </div>
+        </div>
+
+        <!-- Ingestion Pipeline Architecture Monitor -->
+        <div class="panel-section">
+          <div class="panel-header">
+            <span class="panel-tag">PIPELINE TOPOLOGY</span>
+          </div>
+          <div class="topology-stack">
+            <div class="topo-layer">
+              <span class="topo-icon">📥</span>
+              <div class="topo-info">
+                <strong>Ingestion Gateway</strong>
+                <small>SEC EDGAR + RSS + Webhooks</small>
+              </div>
+            </div>
+            <div class="topo-layer">
+              <span class="topo-icon">⚡</span>
+              <div class="topo-info">
+                <strong>3-Tier Deduplication</strong>
+                <small>L1 Hash • L2 SimHash • L3 Clustering</small>
+              </div>
+            </div>
+            <div class="topo-layer">
+              <span class="topo-icon">🏷️</span>
+              <div class="topo-info">
+                <strong>Entity Normalization</strong>
+                <small>CIK &amp; Alias Resolution Dictionary</small>
+              </div>
+            </div>
+            <div class="topo-layer">
+              <span class="topo-icon">💾</span>
+              <div class="topo-info">
+                <strong>ChromaDB + PostgreSQL</strong>
+                <small>Deterministic Doc IDs + Relational Links</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Feed Column -->
+      <main class="feed-main">
+        <div class="feed-header-bar">
+          <div class="feed-title-block">
+            <h2>REAL-TIME INTELLIGENCE STREAM</h2>
+            <span class="feed-sub">Continuous sub-second event ingestion with deterministic deduplication</span>
+          </div>
+          <div class="feed-controls">
+            <input type="text" id="feed-search-input" placeholder="Filter stream by keyword..." class="terminal-search">
+            <button class="btn-icon" id="btn-refresh-feed" title="Refresh Feed">🔄</button>
+          </div>
+        </div>
+
+        <!-- Stream Container -->
+        <div class="event-stream" id="event-stream-container">
+          <div class="stream-empty-state" id="stream-empty">
+            <div class="spinner"></div>
+            <p>Awaiting incoming market events...</p>
+            <small>Use the Ingestion Console on the left to simulate live external disclosures.</small>
+          </div>
+        </div>
+      </main>
+
+      <!-- Right Detail Drawer -->
+      <aside class="detail-drawer" id="detail-drawer">
+        <div class="drawer-header">
+          <span class="drawer-tag">PROVENANCE &amp; AUDIT</span>
+          <button class="close-drawer-btn" id="btn-close-drawer">✕</button>
+        </div>
+
+        <div class="drawer-content" id="drawer-content">
+          <div class="drawer-empty-state">
+            <p>Select an event from the intelligence stream to inspect its cryptographic content hash, resolved entities, and provenance metadata.</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script src="/static/terminal.js"></script>
+</body>
+</html>

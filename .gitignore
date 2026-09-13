@@ -1,2 +1,37 @@
-/01_complete_system_design.md
-/AGENTS.md
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment and secrets
+.env
+.env.local
+*.pem
+
+# Data & local vector stores
+data/
+*.sqlite
+*.db
+
+# Node / Frontend
+node_modules/
+dist/
+.next/
+.DS_Store
+
+# Design and planning documentation
+01_complete_system_design.md
+AGENTS.md
+ARCHITECTURE.md
+HLD.md
+implementation_plan.md
+LLD.md

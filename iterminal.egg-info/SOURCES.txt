@@ -1,0 +1,7 @@
+README.md
+pyproject.toml
+iterminal.egg-info/PKG-INFO
+iterminal.egg-info/SOURCES.txt
+iterminal.egg-info/dependency_links.txt
+iterminal.egg-info/requires.txt
+iterminal.egg-info/top_level.txt
