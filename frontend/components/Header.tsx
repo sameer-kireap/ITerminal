@@ -5,8 +5,8 @@ import Link from "next/link";
 import { simulateScenario } from "../lib/api";
 
 interface HeaderProps {
-  activeTab: "feed" | "alerts" | "delta" | "watchlist";
-  setActiveTab: (tab: "feed" | "alerts" | "delta" | "watchlist") => void;
+  activeTab: "feed" | "alerts" | "delta" | "watchlist" | "copilot" | "fundamentals" | "calendar";
+  setActiveTab: (tab: "feed" | "alerts" | "delta" | "watchlist" | "copilot" | "fundamentals" | "calendar") => void;
   isConnected: boolean;
   eventCount: number;
   onSimulate: (scenario: string) => Promise<void>;
@@ -45,24 +45,49 @@ export function Header({
 
       <nav className="nav-tabs">
         <button
+          id="nav-btn-feed"
           className={`tab-btn ${activeTab === "feed" ? "active" : ""}`}
           onClick={() => setActiveTab("feed")}
         >
           LIVE FEED
         </button>
         <button
+          id="nav-btn-copilot"
+          className={`tab-btn ${activeTab === "copilot" ? "active" : ""}`}
+          onClick={() => setActiveTab("copilot")}
+        >
+          AI RESEARCH COPILOT
+        </button>
+        <button
+          id="nav-btn-fundamentals"
+          className={`tab-btn ${activeTab === "fundamentals" ? "active" : ""}`}
+          onClick={() => setActiveTab("fundamentals")}
+        >
+          FUNDAMENTALS & FILINGS
+        </button>
+        <button
+          id="nav-btn-calendar"
+          className={`tab-btn ${activeTab === "calendar" ? "active" : ""}`}
+          onClick={() => setActiveTab("calendar")}
+        >
+          CALENDAR & CATALYSTS
+        </button>
+        <button
+          id="nav-btn-alerts"
           className={`tab-btn ${activeTab === "alerts" ? "active" : ""}`}
           onClick={() => setActiveTab("alerts")}
         >
           MATERIALITY ALERTS
         </button>
         <button
+          id="nav-btn-delta"
           className={`tab-btn ${activeTab === "delta" ? "active" : ""}`}
           onClick={() => setActiveTab("delta")}
         >
           WHAT CHANGED (24H)
         </button>
         <button
+          id="nav-btn-watchlist"
           className={`tab-btn ${activeTab === "watchlist" ? "active" : ""}`}
           onClick={() => setActiveTab("watchlist")}
         >

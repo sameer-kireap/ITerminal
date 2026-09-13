@@ -1,18 +1,23 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Header } from "../components/Header";
-import { CommandBar } from "../components/CommandBar";
-import { EventCard } from "../components/EventCard";
-import { SideInspector } from "../components/SideInspector";
 import { AlertsTab } from "../components/AlertsTab";
-import { WhatChangedTab } from "../components/WhatChangedTab";
+import CalendarTab from "../components/CalendarTab";
+import { CommandBar } from "../components/CommandBar";
+import { CopilotTab } from "../components/CopilotTab";
+import { EventCard } from "../components/EventCard";
+import FundamentalsTab from "../components/FundamentalsTab";
+import { Header } from "../components/Header";
+import { SideInspector } from "../components/SideInspector";
 import { WatchlistTab } from "../components/WatchlistTab";
-import { Article } from "../lib/types";
+import { WhatChangedTab } from "../components/WhatChangedTab";
 import { fetchArticles, simulateScenario } from "../lib/api";
+import { Article } from "../lib/types";
 
 export default function TerminalDashboard() {
-  const [activeTab, setActiveTab] = useState<"feed" | "alerts" | "delta" | "watchlist">("feed");
+  const [activeTab, setActiveTab] = useState<
+    "feed" | "alerts" | "delta" | "watchlist" | "copilot" | "fundamentals" | "calendar"
+  >("feed");
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -178,15 +183,24 @@ export default function TerminalDashboard() {
             </div>
           )}
 
+          {activeTab === "copilot" && <CopilotTab />}
+          {activeTab === "fundamentals" && (
+            <FundamentalsTab ticker={tickerFilter || "NVDA"} />
+          )}
+          {activeTab === "calendar" && (
+            <CalendarTab ticker={tickerFilter || "NVDA"} />
+          )}
           {activeTab === "alerts" && <AlertsTab />}
           {activeTab === "delta" && <WhatChangedTab />}
           {activeTab === "watchlist" && <WatchlistTab />}
         </main>
 
-        <SideInspector
-          article={selectedArticle}
-          onClose={() => setSelectedArticle(null)}
-        />
+        {activeTab === "feed" && (
+          <SideInspector
+            article={selectedArticle}
+            onClose={() => setSelectedArticle(null)}
+          />
+        )}
       </div>
     </div>
   );

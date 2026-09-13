@@ -103,3 +103,16 @@ class WatchlistTable(Base):
     user_id = Column(String(64), default="default_user", index=True)
     ticker = Column(String(16), nullable=False, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+
+
+class ThesisTable(Base):
+    __tablename__ = "theses"
+
+    id = Column(String(64), primary_key=True)
+    user_id = Column(String(64), default="default_user", index=True)
+    ticker = Column(String(16), nullable=False, index=True)
+    thesis_text = Column(Text, nullable=False)
+    status = Column(String(32), default="active", index=True)
+    last_evaluation = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC))
